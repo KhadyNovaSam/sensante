@@ -49,3 +49,14 @@ print(f"\n{'=' * 50}")
 print("Exploration terminée !")
 print("Prochain lab : entraîner un modèle ML")
 print(f"{'=' * 50}")
+
+
+print(f"\n--- Patients par sexe et diagnostic ---") 
+
+sexe_diag = df.groupby(["sexe", "diagnostic"]).size() 
+
+for (sexe, diag), count in sexe_diag.items(): 
+
+    pct = count / len(df) * 100 
+
+    print(f"  {sexe} / {diag:12s} : {count:3d} patients ({pct:.1f}%)")
