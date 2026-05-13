@@ -6,6 +6,23 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
+
+# --- Application FastAPI ---
+app = FastAPI(
+    title="SenSante API",
+    description="Assistant pré-diagnostic médical pour le Sénégal",
+    version="0.2.0"
+)
+
+# --- Autoriser les requêtes depuis le frontend ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En dev : tout accepter
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Schémas Pydantic ---
 class PatientInput(BaseModel):
@@ -24,13 +41,6 @@ class DiagnosticOutput(BaseModel):
     confiance: str
     message: str
 
-# --- Application FastAPI ---
-app = FastAPI(
-    title="SenSante API",
-    description="Assistant pré-diagnostic médical pour le Sénégal",
-    version="0.2.0"
-)
-
 # --- Chargement du modèle (une seule fois) ---
 print("Chargement du modèle...")
 model = joblib.load("models/model.pkl")
@@ -46,7 +56,6 @@ def health_check():
 
 @app.post("/predict", response_model=DiagnosticOutput)
 def predict(patient: PatientInput):
-    # 1. Encoder les variables catégoriques
     try:
         sexe_enc = le_sexe.transform([patient.sexe])[0]
     except ValueError:
@@ -65,7 +74,6 @@ def predict(patient: PatientInput):
             message=f"Région inconnue : {patient.region}"
         )
 
-    # 2. Construire le vecteur de features
     features = np.array([[
         patient.age, sexe_enc, patient.temperature,
         patient.tension_sys, int(patient.toux),
@@ -73,11 +81,9 @@ def predict(patient: PatientInput):
         region_enc
     ]])
 
-    # 3. Prédire
     diagnostic = model.predict(features)[0]
     proba_max = float(model.predict_proba(features)[0].max())
 
-    # 4. Déterminer le niveau de confiance
     if proba_max >= 0.7:
         confiance = "haute"
     elif proba_max >= 0.4:
@@ -85,7 +91,6 @@ def predict(patient: PatientInput):
     else:
         confiance = "faible"
 
-    # 5. Générer la recommandation
     messages = {
         "palu": "Suspicion de paludisme. Consultez rapidement.",
         "grippe": "Suspicion de grippe. Repos et hydratation.",
@@ -93,7 +98,6 @@ def predict(patient: PatientInput):
         "sain": "Pas de pathologie détectée."
     }
 
-    # 6. Renvoyer le résultat
     return DiagnosticOutput(
         diagnostic=diagnostic,
         probabilite=round(proba_max, 2),
