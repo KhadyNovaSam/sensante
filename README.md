@@ -1,17 +1,24 @@
 ---
-title: Sensante
-emoji: 📚
-colorFrom: indigo
-colorTo: purple
+title: SenSante
+emoji: 🏥
+colorFrom: green
+colorTo: blue
 sdk: docker
-sdk_version: "1.0.0"
-python_version: "3.10"
-app_file: app.py
+app_port: 8000
 pinned: false
-license: mit
-tags:
-- health
-- fastapi
-- machine-learning
-- senegal
 ---
+
+# SenSante 
+Assistant pré-diagnostic médical pour le Sénégal.
+
+## Démo en ligne
+https://KhadyNovaSam-sensante.hf.space
+
+## Stack
+- scikit-learn (modèle ML)
+- FastAPI (API REST)
+- Groq / LLaMA 3 (explication LLM)
+- Docker (conteneurisation)
+
+## Auteur
+Khady Nova Sam - L2 GLSI - ESP/UCAD - 2026
